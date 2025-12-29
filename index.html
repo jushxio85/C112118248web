@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園小工具 - 完美演示版</title>
+    <style>
+        /* 100% 保留所有 CSS 樣式 */
+        :root { --primary: #007AFF; --bg: #f2f2f7; --success: #28a745; --danger: #ff3b30; --warning: #ff9500; --purple: #5856D6; }
+        body { background: #e5e5e5; display: flex; justify-content: center; padding: 20px; font-family: -apple-system, sans-serif; margin: 0; }
+        .phone-container { width: 450px; height: 800px; background: white; border: 14px solid #333; border-radius: 50px; position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
+        .side-menu { position: absolute; top: 0; left: -300px; width: 300px; height: 100%; background: #fff; z-index: 200; transition: 0.3s; box-shadow: 2px 0 15px rgba(0,0,0,0.1); padding-top: 80px; display: flex; flex-direction: column; overflow-y: auto; }
+        .side-menu.active { left: 0; }
+        .menu-item { padding: 20px 30px; border-bottom: 1px solid #f5f5f5; cursor: pointer; color: #333; font-size: 16px; transition: 0.2s; flex-shrink: 0; }
+        .menu-item:hover { background: #f9f9f9; color: var(--primary); }
+        .menu-item-reset { color: var(--danger); font-weight: bold; border-top: 5px solid #f5f5f5; margin-top: auto; }
+        .menu-btn { position: absolute; top: 30px; left: 30px; z-index: 210; font-size: 24px; cursor: pointer; background: white; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .content { height: 100%; padding: 30px; box-sizing: border-box; overflow-y: auto; background: var(--bg); scrollbar-width: none; }
+        .content::-webkit-scrollbar { display: none; }
+        .hidden { display: none !important; }
+        .btn-main { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        .form-box { margin-top: 100px; text-align: center; }
+        .form-box input, .form-box select { width: 90%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; }
+        .link-text { color: var(--primary); margin-top: 25px; cursor: pointer; display: inline-block; }
+        .todo-header { margin-top: 60px; margin-bottom: 10px; color: #333; font-size: 28px; font-weight: 800; }
+        .section-title { font-size: 13px; color: #888; margin: 30px 0 10px 0; font-weight: 700; text-transform: uppercase; }
+        .todo-card { background: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #ddd; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+        .todo-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; width: fit-content; color: white; }
+        .todo-title { font-size: 17px; font-weight: 700; color: #333; margin-top: 4px; }
+        .todo-time { font-size: 13px; color: var(--primary); margin-top: 4px; font-weight: 500; }
+        .expired-card { opacity: 0.6; filter: grayscale(100%); background: #f9f9f9; box-shadow: none; }
+        .unread-title { color: var(--danger) !important; }
+        .unread-badge { background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; vertical-align: middle; margin-left: 8px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .class-card { background: white; padding: 25px 20px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .control-panel { background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .control-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .history-chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .history-chip { background: #eef2ff; color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid #dbeafe; }
+        .student-row { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .grade-input { width: 70px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 16px; }
+        .report-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .report-header { background: var(--primary); color: white; padding: 18px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+        .report-body { padding: 15px 20px; }
+        .report-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 12px 0; font-size: 15px; color: #333; }
+        .report-row:last-child { border-bottom: none; }
+        .tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #f0f0f0; color: #666; margin-left: 8px; }
+        .timetable { width: 100%; border-collapse: separate; border-spacing: 3px; background: white; font-size: 12px; table-layout: fixed; margin-bottom: 40px; }
+        .timetable th, .timetable td { border: none; text-align: center; height: 70px; vertical-align: middle; }
+        .timetable th { background: #f8f8f8; color: #888; font-weight: bold; border-radius: 8px; height: 40px; }
+        .course-cell { width: 100%; height: 100%; border-radius: 10px; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .room-text { font-size: 10px; font-weight: normal; opacity: 0.8; margin-top: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div id="ui-menu-btn" class="menu-btn hidden" onclick="toggleMenu()">☰</div>
+    <div id="ui-side-menu" class="side-menu"></div>
+
+    <div id="page-login" class="content">
+        <div class="form-box">
+            <h2 style="font-size:28px; font-weight:bold; color:#333; margin-bottom:30px;">帳號登入</h2>
+            <input type="text" id="login-user" placeholder="帳號">
+            <input type="password" id="login-pass" placeholder="密碼">
+            <button class="btn-main" onclick="handleLogin()">登入系統</button>
+            <div class="link-text" onclick="showReg()">還沒有帳號？前往註冊</div>
+            <div style="margin-top:20px; color:#ccc; font-size:12px; cursor:pointer;" onclick="forceReset()">系統異常？點此重置資料</div>
+        </div>
+    </div>
+
+    <div id="page-register" class="content hidden">
+        <div class="form-box">
+            <h2>創立帳號</h2>
+            <input type="text" id="reg-user" placeholder="設定帳號">
+            <input type="password" id="reg-pass" placeholder="設定密碼">
+            <select id="reg-role"><option value="student">身份：學生</option><option value="teacher">身份：老師</option></select>
+            <button class="btn-main" style="background:var(--success);" onclick="handleRegister()">完成註冊</button>
+            <div class="link-text" onclick="showLogin()">返回登入</div>
+        </div>
+    </div>
+
+    <div id="student-dashboard" class="content hidden">
+        <h2 class="todo-header" id="student-welcome-text">👋 早安！</h2>
+        <div class="section-title">⚡ 接下來要注意</div>
+        <div id="upcoming-list"></div>
+        <div class="section-title">🏁 已過期 / 歷史紀錄</div>
+        <div id="history-list"></div>
+    </div>
+
+    <div id="student-timetable" class="content hidden">
+        <h3 style="margin-top:50px; text-align:center; font-size:22px; color:#333; margin-bottom:20px;">週課表查詢</h3>
+        <table class="timetable"><thead id="th"></thead><tbody id="timetable-body"></tbody></table>
+    </div>
+
+    <div id="student-grades" class="content hidden">
+        <h3 style="margin-top:50px; font-size:22px; margin-bottom:20px;">成績查詢</h3>
+        <div id="official-report"></div>
+    </div>
+
+    <div id="teacher-dashboard" class="content hidden"><h2 style="margin-top:60px; margin-bottom:20px;">👨‍🏫 我的課程</h2><div id="teacher-class-list"></div></div>
+    <div id="teacher-actions" class="content hidden"><div style="margin-top:50px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 id="action-title" style="margin:0;"></h3><button onclick="switchPage('teacher-dashboard')" class="btn-main" style="width:auto;margin:0;padding:5px 15px;">返回</button></div><div class="class-card" onclick="goToGrading()">📝 輸入成績</div><div class="class-card" style="border-left-color:var(--purple)" onclick="goToAnnouncement()">📢 發布公告</div></div>
+    <div id="teacher-grading" class="content hidden"><div style="margin-top:50px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 id="grading-title" style="margin:0;"></h3><button onclick="switchPage('teacher-actions')" class="btn-main" style="width:auto;margin:0;padding:5px 15px;">返回</button></div><div class="control-panel" style="border-left:5px solid var(--success);"><h4 style="margin:0 0 10px 0;">➕ 新增評分項目</h4><div class="control-row"><input type="text" id="new-item-name" placeholder="名稱"><input type="number" id="new-item-weight" placeholder="權重%" style="width:70px;"></div><button class="btn-main" style="margin-top:0; font-size:14px; background:var(--success);" onclick="addAssessmentItem()">建立項目</button></div><div class="control-panel" style="border-left:5px solid var(--primary);"><h4 style="margin:0 0 10px 0;">📝 輸入分數</h4><select id="assessment-select" onchange="renderGradingList()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:16px;"><option value="">-- 請選擇 --</option></select></div><div id="grading-list-area"></div></div>
+    <div id="teacher-announcement" class="content hidden"><div style="margin-top:50px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>發布公告</h3><button onclick="switchPage('teacher-actions')" class="btn-main" style="width:auto;margin:0;padding:5px 15px;">返回</button></div><div class="control-panel" style="border-left:5px solid var(--purple);"><h4>設定通知內容</h4><div id="history-chips-area" class="history-chip-container"></div><p>標題</p><input type="text" id="anc-type"><p>時間</p><input type="datetime-local" id="anc-date" style="width:90%;"><p>說明</p><input type="text" id="anc-detail"><button class="btn-main" style="background:var(--purple);" onclick="publishAnnouncement()">發送</button></div></div>
+</div>
+
+<script>
+    // --- 1. 資料變數 ---
+    const original_courses = [
+        { day: 1, start: 5, end: 7, name: "統計學(一)", room: "E212", color: "#e3f2fd", text: "#1565c0" },
+        { day: 2, start: 2, end: 4, name: "電商安全", room: "C220", color: "#ffebee", text: "#c62828" },
+        { day: 2, start: 5, end: 6, name: "運動休閒", room: "E010", color: "#e8f5e9", text: "#2e7d32" },
+        { day: 3, start: 2, end: 4, name: "醫療資訊", room: "E212", color: "#f3e5f5", text: "#6a1b9a" },
+        { day: 4, start: 3, end: 4, name: "Python分析", room: "B211", color: "#fff3e0", text: "#ef6c00" },
+        { day: 4, start: 5, end: 7, name: "商業分析", room: "C220", color: "#e0f7fa", text: "#006064" },
+        { day: 5, start: 1, end: 2, name: "實用英文", room: "E301", color: "#fce4ec", text: "#880e4f" },
+        { day: 5, start: 5, end: 7, name: "資料結構", room: "E006", color: "#fff8e1", text: "#ff6f00" } 
+    ];
+
+    const new_test_courses = [
+        { day: 1, start: 5, end: 6, name: "飲食安全", room: "C204", color: "#E3F2FD", text: "#1565C0" },
+        { day: 2, start: 3, end: 4, name: "音樂賞析", room: "E015", color: "#F3E5F5", text: "#7B1FA2" },
+        { day: 2, start: 7, end: 8, name: "全球挑戰", room: "C204", color: "#E8F5E9", text: "#2E7D32" },
+        { day: 3, start: 2, end: 4, name: "統計學(二)", room: "E006", color: "#FFF3E0", text: "#E65100" },
+        { day: 3, start: 7, end: 9, name: "資料庫管理", room: "C220", color: "#E0F7FA", text: "#006064" },
+        { day: 4, start: 2, end: 4, name: "資訊網路", room: "C220", color: "#E1F5FE", text: "#0277BD" },
+        { day: 4, start: 5, end: 7, name: "企業個案", room: "C117", color: "#FCE4EC", text: "#C2185B" },
+        { day: 5, start: 1, end: 2, name: "實用英文(四)", room: "E301", color: "#FFF8E1", text: "#FBC02D" },
+        { day: 5, start: 3, end: 4, name: "中國文明", room: "E015", color: "#F1F8E9", text: "#33691E" }
+    ];
+
+    const teacherClassesList = [{ name: "資料結構(甲班)", short: "資料結構" }, { name: "微積分(甲班)", short: "微積分" }];
+    const students = ["王小明", "李大華", "陳雅婷", "張志豪"];
+    let dbClasses = {}, dbScores = {}, dbAnnouncements = [], dbAncHistory = [], studentReadHistory = [];
+    let currentClassFull = "", currentSubject = "", currentUser = "";
+
+    // --- 2. 系統初始化 (成績多元化隨機生成) ---
+    function loadDatabase() {
+        const rawClasses = localStorage.getItem('dbClasses');
+        if(rawClasses) {
+            dbClasses = JSON.parse(rawClasses);
+            dbScores = JSON.parse(localStorage.getItem('dbScores')) || {};
+            dbAnnouncements = JSON.parse(localStorage.getItem('dbAnnouncements')) || [];
+            dbAncHistory = JSON.parse(localStorage.getItem('dbAncHistory')) || ["調課通知", "換教室通知"];
+            studentReadHistory = JSON.parse(localStorage.getItem('studentReadHistory')) || [];
+            // 強制根據最新要求同步 Test 帳號資料
+            forceSyncTestConfig(); 
+        } else {
+            forceGenerateData();
+        }
+    }
+
+    // 依照指定需求生成成績模板 (Test 帳號專用)
+    function getCustomTemplate(courseName) {
+        // 基本盤：期中期末 + 平時
+        let base = [{name:"期中考",weight:30}, {name:"期末考",weight:35}, {name:"平時成績",weight:15}];
+        
+        // 特殊指定：飲食安全、統計學(二)、企業個案、中國文明 -> 加報告 (20%)
+        if(["飲食安全", "統計學(二)", "企業個案", "中國文明"].includes(courseName)) {
+            base.push({name: "報告成績", weight: 20});
+        }
+        
+        // 特殊指定：全球挑戰、統計學(二)、資料庫管理 -> 加小考 (按情況分配權重)
+        if(["全球挑戰", "統計學(二)", "資料庫管理"].includes(courseName)) {
+            // 如果同時有報告和小考(統計學)，各佔 10%
+            if(courseName === "統計學(二)") {
+                base.find(i=>i.name==="報告成績").weight = 10;
+                base.push({name: "小考成績", weight: 10});
+            } else {
+                base.push({name: "小考成績", weight: 20});
+            }
+        } else if (base.length === 3) {
+            // 其他沒被指定的，將剩下的 20% 分給平時成績
+            base.find(i=>i.name==="平時成績").weight = 35;
+        }
+        return base;
+    }
+
+    // 強制同步 Test 帳號的課程配置
+    function forceSyncTestConfig() {
+        new_test_courses.forEach(c => {
+            dbClasses[c.name] = getCustomTemplate(c.name);
+            if(!dbScores[c.name]) dbScores[c.name] = {};
+            students.forEach(stu => {
+                if(!dbScores[c.name][stu]) dbScores[c.name][stu] = {};
+                dbClasses[c.name].forEach(item => {
+                    // 若無分數則補上隨機分
+                    if(!dbScores[c.name][stu][item.name]) {
+                        dbScores[c.name][stu][item.name] = Math.floor(Math.random()*35) + 65;
+                    }
+                });
+            });
+        });
+        saveAll();
+    }
+
+    function forceGenerateData() {
+        dbClasses = {}; dbScores = {};
+        // 生成 C112118248 與 test 的基礎
+        original_courses.forEach(c => {
+            const type = (c.name === "統計學(一)") ? "custom" : "standard";
+            dbClasses[c.name] = (type === "custom") ?
+                [{name: "平時成績", weight: 20}, {name: "小考", weight: 20}, {name: "期中報告", weight: 10}, {name: "期中考", weight: 20}, {name: "期末考", weight: 30}] :
+                [{name:"期中考",weight:30}, {name:"期末考",weight:40}, {name:"平時成績",weight:30}];
+                
+            dbScores[c.name] = {};
+            students.forEach(stu => {
+                dbScores[c.name][stu] = {};
+                dbClasses[c.name].forEach(item => {
+                    if(c.name==="統計學(一)" && item.name==="期中報告") dbScores[c.name][stu][item.name] = 85;
+                    else dbScores[c.name][stu][item.name] = Math.floor(Math.random()*30) + 70;
+                });
+            });
+        });
+        
+        teacherClassesList.forEach(tc => {
+            if(!dbClasses[tc.name]) {
+                dbClasses[tc.name] = [{name: "平時成績", weight: 20}, {name: "小考1", weight: 10}, {name: "小考2", weight: 10}, {name: "期中考", weight: 25}, {name: "期末考", weight: 35}];
+                dbScores[tc.name] = {};
+                students.forEach(stu => dbScores[tc.name][stu] = {});
+            }
+        });
+
+        forceSyncTestConfig(); // 生成 Test 帳號的特殊資料
+        
+        dbAnnouncements = [];
+        dbAncHistory = ["調課通知", "換教室通知"];
+        studentReadHistory = [];
+        saveAll();
+    }
+
+    function saveAll() {
+        localStorage.setItem('dbClasses', JSON.stringify(dbClasses));
+        localStorage.setItem('dbScores', JSON.stringify(dbScores));
+        localStorage.setItem('dbAnnouncements', JSON.stringify(dbAnnouncements));
+        localStorage.setItem('dbAncHistory', JSON.stringify(dbAncHistory));
+        localStorage.setItem('studentReadHistory', JSON.stringify(studentReadHistory));
+    }
+
+    function forceReset() {
+        if(confirm("確定要重置所有資料嗎？")) { localStorage.clear(); location.reload(); }
+    }
+
+    loadDatabase();
+
+    // --- 3. 介面導航 ---
+    function showReg() { switchPage('page-register'); }
+    function showLogin() { switchPage('page-login'); }
+    function handleRegister() { 
+        const u = document.getElementById('reg-user').value.trim();
+        const p = document.getElementById('reg-pass').value.trim();
+        const r = document.getElementById('reg-role').value;
+        if(!u || !p) return alert("請輸入完整資訊");
+        let extraUsers = JSON.parse(localStorage.getItem('extraUsers') || '{}');
+        if(extraUsers[u] || u === "C112118248" || u === "test" || u === "teacher") return alert("帳號已存在");
+        extraUsers[u] = {password: p, role: r};
+        localStorage.setItem('extraUsers', JSON.stringify(extraUsers));
+        alert("註冊成功！"); showLogin();
+    }
+
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const extraUsers = JSON.parse(localStorage.getItem('extraUsers') || '{}');
+
+        // 1. Test 帳號
+        if(u==="test" && p==="test") {
+            currentUser = u;
+            document.getElementById('student-welcome-text').innerText = `👋 你好，測試者`;
+            return enterSystem('student');
+        }
+        // 2. C112118248 帳號
+        if(u === "C112118248" && p === "C112118248") {
+            currentUser = u;
+            document.getElementById('student-welcome-text').innerText = `你好，邱洪恩同學`;
+            return enterSystem('student');
+        }
+        // 3. Teacher
+        if(u === "teacher" && p === "teacher") return enterSystem('teacher');
+        
+        // 4. Extra Users
+        if(extraUsers[u] && extraUsers[u].password === p) {
+            currentUser = u;
+            document.getElementById('student-welcome-text').innerText = `👋 早安，${currentUser}！`;
+            return enterSystem(extraUsers[u].role);
+        }
+        alert("帳號密碼錯誤");
+    }
+
+    function enterSystem(role) {
+        document.getElementById('ui-menu-btn').classList.remove('hidden');
+        renderMenu(role);
+        if(role === 'student') { switchPage('student-dashboard'); renderStudentDashboard(); renderTimetable(); renderStudentGrades(); }
+        else { switchPage('teacher-dashboard'); renderTeacherClassList(); }
+    }
+
+    function switchPage(id) { document.querySelectorAll('.content').forEach(p => p.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.getElementById('ui-side-menu').classList.remove('active'); }
+    function toggleMenu() { document.getElementById('ui-side-menu').classList.toggle('active'); }
+
+    function renderMenu(role) {
+        const m = document.getElementById('ui-side-menu');
+        const items = role === 'student' ? [{n:'🔔 待辦',p:'student-dashboard'}, {n:'📅 課表',p:'student-timetable'}, {n:'📊 成績',p:'student-grades'}] : [{n:'👨‍🏫 管理',p:'teacher-dashboard'}];
+        m.innerHTML = items.map(i => `<div class="menu-item" onclick="switchPage('${i.p}')">${i.n}</div>`).join('') + `<div class="menu-item" onclick="location.reload()">🚪 登出</div><div class="menu-item menu-item-reset" onclick="forceReset()">🔴 重置</div>`;
+    }
+
+    // --- 4. 學生端邏輯 ---
+    function renderStudentDashboard() {
+        const up = document.getElementById('upcoming-list');
+        const his = document.getElementById('history-list');
+        up.innerHTML = ""; his.innerHTML = "";
+
+        if(currentUser !== "C112118248" && currentUser !== "test") {
+            up.innerHTML = "<p style='text-align:center;color:#999;padding:20px;'>新帳號目前無待辦事項</p>"; return; 
+        }
+
+        const now = new Date();
+        const dateStr = (d, t) => { const dt = new Date(now); dt.setDate(dt.getDate()+d); return dt.toISOString().split('T')[0] + "T" + t; };
+        
+        let displayItems = [];
+
+        // C112118248 固定資料
+        if(currentUser === "C112118248") {
+            displayItems = [
+                { id: 901, type: '作業提醒', title: '電商安全 - 課後作業', fullDate: dateStr(1,"23:59"), displayDate: '明日 23:59', color: '#007AFF', category: 'todo', detail: '請上傳至數位學院' },
+                { id: 902, type: '報告提醒', title: '商業分析 - 小組報告', fullDate: dateStr(3,"13:30"), displayDate: '週四 13:30', color: '#ffcc00', category: 'todo', detail: '準備 10 分鐘 PPT' },
+                { id: 903, type: '考試提醒', title: '資料結構 - 期中考', fullDate: dateStr(4,"13:30"), displayDate: '週五 13:30', color: '#ff3b30', category: 'todo', detail: '範圍: Ch1-Ch5' }
+            ];
+        } 
+        // test 隨機生成 3 筆
+        else if(currentUser === "test") {
+            const picks = new_test_courses.sort(() => 0.5 - Math.random()).slice(0, 3);
+            picks.forEach((c, idx) => {
+                const r = Math.random();
+                if(r < 0.4) displayItems.push({ id: 100+idx, type: '作業繳交', title: `${c.name} - 習題`, fullDate: dateStr(2,"23:59"), displayDate: '後天 23:59', color: '#007AFF', category: 'todo', detail: '完成單元練習' });
+                else if (r < 0.7) displayItems.push({ id: 100+idx, type: '分組報告', title: `${c.name} - 期中報告`, fullDate: dateStr(5,"12:00"), displayDate: '下週報告', color: '#FF9500', category: 'todo', detail: '繳交 PDF 檔' });
+                else displayItems.push({ id: 100+idx, type: '停課通知', title: `${c.name} - 課程異動`, fullDate: dateStr(0,"00:00"), displayDate: '本週暫停', color: '#FF3B30', category: 'todo', detail: '老師公假一次' });
+            });
+        }
+
+        const myCourseNames = (currentUser === "test") ? new_test_courses.map(c => c.name) : original_courses.map(c => c.name);
+        const myAnc = dbAnnouncements.filter(a => myCourseNames.includes(a.targetSubject));
+        const all = [...displayItems, ...myAnc];
+
+        let active = [], expired = [];
+        all.forEach(i => (new Date(i.fullDate) < now) ? expired.push(i) : active.push(i));
+        
+        active.sort((a,b) => new Date(a.fullDate) - new Date(b.fullDate));
+        expired.sort((a,b) => new Date(b.fullDate) - new Date(a.fullDate));
+
+        const render = (i, isExp) => {
+            let title = i.title, detail = i.detail, badge = "", cls = isExp ? "todo-card expired-card" : "todo-card";
+            if(i.category === 'announce') {
+                title = i.targetClass;
+                if(!isExp && !studentReadHistory.includes(i.id)) { title = `<span class="unread-title">${title}</span>`; badge = `<span class="unread-badge">NEW</span>`; }
+            }
+            const click = (i.category==='announce' && !isExp) ? `onclick="readAnc(${i.id})"` : "";
+            const time = i.displayDate || i.fullDate.replace("T"," ");
+            const color = i.color || "#5856D6";
+            return `<div class="${cls}" style="border-left-color:${color}" ${click}><div style="display:flex;justify-content:space-between;"><div class="todo-tag" style="background:${color};color:${color==='#ffcc00'?'black':'white'}">${i.type}</div>${badge}</div><div class="todo-title">${title}</div><div style="font-size:15px;font-weight:bold;color:#333;margin-top:5px;">${detail}</div><div class="todo-time">🕒 ${time}</div></div>`;
+        };
+
+        if(active.length) active.forEach(i => up.innerHTML += render(i, false)); else up.innerHTML = `<div style="text-align:center;color:#999;padding:20px;">無待辦事項</div>`;
+        if(expired.length) expired.forEach(i => his.innerHTML += render(i, true)); else his.innerHTML = `<div style="text-align:center;color:#ccc;padding:20px;">無紀錄</div>`;
+    }
+
+    function readAnc(id) { if(!studentReadHistory.includes(id)) { studentReadHistory.push(id); saveAll(); renderStudentDashboard(); } }
+
+    function renderTimetable() {
+        const body = document.getElementById('timetable-body');
+        const th = document.getElementById('th');
+        th.innerHTML = '<tr><th style="width:40px;">節</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr>';
+        body.innerHTML = "";
+        
+        let target = [];
+        if(currentUser === "C112118248") target = original_courses;
+        else if(currentUser === "test") target = new_test_courses;
+
+        // 迴圈擴展到 10
+        for(let i=1; i<=10; i++) {
+            let label = (i === 5) ? "A" : (i > 5 ? i-1 : i);
+            let r = `<tr><td style="font-weight:bold;color:#888;">${label}</td>`;
+            for(let d=1; d<=5; d++) {
+                const c = target.find(x => x.day === d && i >= x.start && i <= x.end);
+                r += c ? `<td><div class="course-cell" style="background:${c.color};color:${c.text}"><span>${c.name}</span><span class="room-text">📍${c.room}</span></div></td>` : `<td></td>`;
+            }
+            body.innerHTML += r + `</tr>`;
+        }
+    }
+
+    function renderStudentGrades() {
+        const div = document.getElementById('official-report');
+        const isOfficial = (currentUser === "C112118248" || currentUser === "test");
+        if(!isOfficial) { div.innerHTML = "<p style='text-align:center;padding:30px;color:#888;'>尚無成績資料</p>"; return; }
+
+        let html = "";
+        const target_list = (currentUser === "test") ? new_test_courses : original_courses;
+        const stu = "王小明";
+
+        target_list.forEach(c => {
+            const items = dbClasses[c.name] || [];
+            const scores = dbScores[c.name]?.[stu] || {};
+            if(items.length) {
+                let rows = "", total = 0, totalWeight = 0;
+                items.forEach(i => {
+                    const sc = scores[i.name];
+                    const disp = sc ? sc : "-";
+                    rows += `<div class="report-row"><span>${i.name} <span class="tag">${i.weight}%</span></span><span style="font-weight:bold;${sc<60&&sc!==''?'color:red':''}">${disp}</span></div>`;
+                    if(sc) {
+                        total += parseFloat(sc)*(i.weight/100);
+                        totalWeight += i.weight;
+                    }
+                });
+                let final = (totalWeight>0) ? total.toFixed(1) : "-";
+                html += `<div class="report-card"><div class="report-header" style="background:${c.text}"><span>${c.name}</span><span>${final} 分</span></div><div class="report-body">${rows}</div></div>`;
+            }
+        });
+        div.innerHTML = html;
+    }
+
+    // --- 5. 教師端邏輯 (100% 完整) ---
+    function renderTeacherClassList() {
+        const list = document.getElementById('teacher-class-list');
+        list.innerHTML = "";
+        teacherClassesList.forEach(c => {
+            let color = c.name.includes("資料結構") ? "#fff3e0" : "#e3f2fd";
+            let bColor = c.name.includes("資料結構") ? "#ff9800" : "#2196f3";
+            list.innerHTML += `<div class="class-card" style="background:${color};border-left-color:${bColor}" onclick="selectClass('${c.name}','${c.short}')"><div><div style="font-size:18px;font-weight:bold;">${c.name}</div><div style="font-size:14px;color:#666;margin-top:5px;">資管系學生</div></div><span style="font-size:24px;opacity:0.5;">👉</span></div>`;
+        });
+    }
+
+    function selectClass(n, s) { currentClassFull = n; currentSubject = s; document.getElementById('action-title').innerText = n; switchPage('teacher-actions'); }
+    function goToGrading() { document.getElementById('grading-title').innerText = currentClassFull; if(!dbClasses[currentClassFull]) dbClasses[currentClassFull] = []; updateAssessList(); switchPage('teacher-grading'); document.getElementById('grading-list-area').innerHTML = '<p style="text-align:center;color:#999;margin-top:30px;">請先選擇項目</p>'; }
+    function addAssessmentItem() { const n = document.getElementById('new-item-name').value; const w = parseInt(document.getElementById('new-item-weight').value); if(!n || isNaN(w)) return alert("輸入錯誤"); dbClasses[currentClassFull].push({name:n, weight:w}); saveAll(); alert("已新增"); updateAssessList(); document.getElementById('assessment-select').value = n; renderGradingList(); }
+    function updateAssessList() { const s = document.getElementById('assessment-select'); s.innerHTML = '<option value="">-- 請選擇 --</option>'; if(dbClasses[currentClassFull]) dbClasses[currentClassFull].forEach(i => s.innerHTML += `<option value="${i.name}">${i.name} (${i.weight}%)</option>`); }
+    function renderGradingList() { const item = document.getElementById('assessment-select').value; const div = document.getElementById('grading-list-area'); if(!item) { div.innerHTML=""; return; } let h = `<h4 style="margin:20px 0 10px 0;">輸入：${item}</h4>`; students.forEach(stu => { const sc = (dbScores[currentClassFull] && dbScores[currentClassFull][stu]) ? dbScores[currentClassFull][stu][item] || "" : ""; h += `<div class="student-row"><span>${stu}</span><input type="number" class="grade-input" value="${sc}" onchange="saveScore('${stu}','${item}',this.value)"></div>`; }); div.innerHTML = h; }
+    function saveScore(stu, item, val) { if(!dbScores[currentClassFull]) dbScores[currentClassFull] = {}; if(!dbScores[currentClassFull][stu]) dbScores[currentClassFull][stu] = {}; dbScores[currentClassFull][stu][item] = val; saveAll(); }
+    function goToAnnouncement() { const div = document.getElementById('history-chips-area'); div.innerHTML = ""; dbAncHistory.forEach(t => div.innerHTML += `<div class="history-chip" onclick="document.getElementById('anc-type').value='${t}'">${t}</div>`); document.getElementById('anc-type').value = ""; document.getElementById('anc-date').value = ""; document.getElementById('anc-detail').value = ""; switchPage('teacher-announcement'); }
+    function publishAnnouncement() { const t = document.getElementById('anc-type').value; const d = document.getElementById('anc-date').value; const det = document.getElementById('anc-detail').value; if(!t || !d || !det) return alert("請填寫完整"); if(!dbAncHistory.includes(t)) { dbAncHistory.push(t); saveAll(); } const dateObj = new Date(d); const display = dateObj.toLocaleString('zh-TW', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }); dbAnnouncements.push({ id: Date.now(), targetSubject: currentSubject, targetClass: currentClassFull, type: t, fullDate: d, displayDate: display, detail: det, category: 'announce', color: '#5856D6' }); saveAll(); alert("發布成功"); switchPage('teacher-actions'); }
+</script>
+</body>
+</html>
